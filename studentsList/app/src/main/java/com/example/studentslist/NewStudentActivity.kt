@@ -1,14 +1,14 @@
 package com.example.studentslist
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.example.studentslist.StudentListActivity
 import com.example.studentslist.models.Student
-import com.example.studentslist.repositories.StudentRepository
-import java.util.UUID
 
 class NewStudentActivity : AppCompatActivity() {
 
@@ -16,19 +16,31 @@ class NewStudentActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_new_student)
 
-        val studentNameEditText: EditText = findViewById(R.id.studentNameEditText)
-        val addStudentButton: Button = findViewById(R.id.addStudentButton)
+        val studentNameEditText = findViewById<EditText>(R.id.studentNameEditText)
+        val studentIdEditText = findViewById<EditText>(R.id.studentIdEditText)
+        val saveStudentButton = findViewById<Button>(R.id.saveStudentButton)
+        val studentImageView = findViewById<ImageView>(R.id.studentImageView)
 
-        addStudentButton.setOnClickListener {
-            val studentName = studentNameEditText.text.toString()
-            if (studentName.isNotEmpty()) {
-                val newStudent = Student(id = UUID.randomUUID().toString(), name = studentName)
-                StudentRepository.addStudent(newStudent)
+        // Set a static image (already done in XML, no additional logic is required here)
 
-                val intent = Intent(this, StudentListActivity::class.java)
-                startActivity(intent)
-                finish()  // Close the NewStudentActivity
+        saveStudentButton.setOnClickListener {
+            val name = studentNameEditText.text.toString()
+            val id = studentIdEditText.text.toString()
+
+            // Validate inputs
+            if (name.isBlank() || id.isBlank()) {
+                Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
             }
+
+            // Create a new Student object
+            val newStudent = Student(id, name, false)
+
+            // Pass the student back to the Student List Activity
+            val resultIntent = Intent()
+            resultIntent.putExtra("newStudent", newStudent)
+            setResult(Activity.RESULT_OK, resultIntent)
+            finish() // Close the activity
         }
     }
 }

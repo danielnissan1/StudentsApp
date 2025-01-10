@@ -1,5 +1,7 @@
 package com.example.studentslist
 
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.CheckBox
@@ -7,52 +9,63 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.studentslist.models.Student
-import com.example.studentslist.repositories.StudentRepository
 
 class EditStudentActivity : AppCompatActivity() {
+
+    private lateinit var student: Student
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit_student)
 
-        val student = intent.getParcelableExtra<Student>("student")
+        // Retrieve the student passed from StudentDetailsActivity
+        student = intent.getParcelableExtra<Student>("student") ?: return
 
-        val studentNameEditText: EditText = findViewById(R.id.studentNameEditText)
-        val studentIdEditText: EditText = findViewById(R.id.studentIdEditText)
-        val checkStatus: CheckBox = findViewById(R.id.checkStatusCheckBox)
-        val updateButton: Button = findViewById(R.id.updateButton)
-        val deleteButton: Button = findViewById(R.id.deleteButton)
+        // Initialize UI components
+        val studentNameInput: EditText = findViewById(R.id.editStudentNameInput)
+        val studentIdInput: EditText = findViewById(R.id.editStudentIdInput)
+        val studentCheckBox: CheckBox = findViewById(R.id.editStudentCheckBox)
+        val saveButton: Button = findViewById(R.id.saveStudentButton)
+        val deleteButton: Button = findViewById(R.id.deleteStudentButton)
 
-        student?.let {
-            studentNameEditText.setText(it.name)
-            studentIdEditText.setText(it.id)
-            checkStatus.isChecked = it.checkStatus
-        }
+        // Populate fields with the current student data
+        studentNameInput.setText(student.name)
+        studentIdInput.setText(student.id)
+        studentCheckBox.isChecked = student.checkStatus
 
-        // Update student details
-        updateButton.setOnClickListener {
-            val updatedName = studentNameEditText.text.toString()
-            val updatedId = studentIdEditText.text.toString()
-            val updatedCheckStatus = checkStatus.isChecked
+        // Save button functionality
+        saveButton.setOnClickListener {
+            val updatedName = studentNameInput.text.toString().trim()
+            val updatedId = studentIdInput.text.toString().trim()
+            val updatedCheckStatus = studentCheckBox.isChecked
 
-            if (updatedName.isNotBlank() && updatedId.isNotBlank()) {
-                val updatedStudent = Student(updatedId, updatedName, updatedCheckStatus)
-                StudentRepository.updateStudent(updatedStudent)
-
-                Toast.makeText(this, "Student updated", Toast.LENGTH_SHORT).show()
-                finish()  // Close the activity
-            } else {
-                Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
+            if (updatedName.isEmpty() || updatedId.isEmpty()) {
+                Toast.makeText(this, "Name and ID cannot be empty", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
             }
+
+            // Update student object
+            val updatedStudent = student.copy(
+                name = updatedName,
+                id = updatedId,
+                checkStatus = updatedCheckStatus
+            )
+
+            // Return the updated student to StudentListActivity or StudentDetailsActivity
+            val resultIntent = Intent()
+            resultIntent.putExtra("updatedStudent", updatedStudent)
+            setResult(Activity.RESULT_OK, resultIntent)
+            finish()
+
         }
 
-        // Delete student
+        // Delete button functionality
         deleteButton.setOnClickListener {
-            student?.let {
-                StudentRepository.deleteStudent(it)
-                Toast.makeText(this, "Student deleted", Toast.LENGTH_SHORT).show()
-                finish()  // Close the activity
-            }
+            // Pass the deletion signal back
+            val resultIntent = Intent()
+            resultIntent.putExtra("deleteStudentId", student.id)
+            setResult(Activity.RESULT_FIRST_USER, resultIntent)
+            finish()
         }
     }
 }
