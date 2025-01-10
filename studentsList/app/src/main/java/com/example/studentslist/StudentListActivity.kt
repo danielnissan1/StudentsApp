@@ -15,6 +15,34 @@ class StudentListActivity : AppCompatActivity() {
     private lateinit var adapter: StudentAdapter
     private val studentList = mutableListOf<Student>()
 
+    private val editStudentLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            // Handle student update
+            val updatedStudent: Student? = result.data?.getParcelableExtra("updatedStudent")
+            updatedStudent?.let {
+                val position = studentList.indexOfFirst { student -> student.id == it.id }
+                if (position != -1) {
+                    studentList[position] = it // Update the student at the correct position
+                    adapter.notifyItemChanged(position) // Notify adapter that the item has been updated
+                    Toast.makeText(this, "Student updated!", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } else if (result.resultCode == RESULT_FIRST_USER) {
+            // Handle student deletion
+            val deletedStudentId = result.data?.getStringExtra("deleteStudentId")
+            deletedStudentId?.let {
+                val position = studentList.indexOfFirst { it.id == deletedStudentId }
+                if (position != -1) {
+                    studentList.removeAt(position)
+                    adapter.notifyItemRemoved(position) // Notify adapter that the item has been removed
+                    Toast.makeText(this, "Student deleted!", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+
+
     // Register the launcher for the Add Student screen
     private val addStudentLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -39,10 +67,11 @@ class StudentListActivity : AppCompatActivity() {
 
         // Initialize the adapter
         adapter = StudentAdapter(studentList) { student ->
-            // Handle click on a student row to show student details
-            val intent = Intent(this, StudentDetailsActivity::class.java)
+            // Open the EditStudentActivity when a student is clicked
+            val intent = Intent(this, EditStudentActivity::class.java)
             intent.putExtra("student", student)
-            startActivity(intent)
+            editStudentLauncher.launch(intent)  // Use the launcher to open the activity
+
         }
 
         recyclerView.adapter = adapter

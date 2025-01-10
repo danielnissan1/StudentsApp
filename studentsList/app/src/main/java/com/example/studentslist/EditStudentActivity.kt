@@ -51,11 +51,12 @@ class EditStudentActivity : AppCompatActivity() {
                 checkStatus = updatedCheckStatus
             )
 
-            // Pass the updated student back to StudentDetailsActivity
+            // Return the updated student to StudentListActivity or StudentDetailsActivity
             val resultIntent = Intent()
             resultIntent.putExtra("updatedStudent", updatedStudent)
             setResult(Activity.RESULT_OK, resultIntent)
             finish()
+
         }
 
         // Delete button functionality
